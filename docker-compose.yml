@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database Container
+  postgres:
+    image: postgres:16-alpine
+    container_name: ivorydev_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ivorydev
+      POSTGRES_PASSWORD: ivorydev2026pass
+      POSTGRES_DB: ivorydev_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./server/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ivorydev -d ivorydev_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Express Backend + Vite Frontend Web App Container
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ivorydev_app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ivorydev
+      POSTGRES_PASSWORD: ivorydev2026pass
+      POSTGRES_DB: ivorydev_db
+      ADMIN_USERNAME: admin_ivorydev
+      ADMIN_PASSWORD: Abidjan2026#SecretKey
+      JWT_SECRET: ivorydev_secret_jwt_key_2026
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
